@@ -7,17 +7,17 @@ import sys
 pygame.init()
 
 # Screen dimensions
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 600, 400
 TILE_SIZE = 40
-FPS = 60
+FPS = 80
 
 # Colors (Students can change these!)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)
+BLUE = (0, 0, 128)
+RED = (255, 36, 0)
+GREEN = (34, 139, 34)
+YELLOW = (255, 255, 100)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Maze Explorer - Salma's Edition")
@@ -31,7 +31,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         # To use an image later: self.image = pygame.image.load("player.png")
         self.image = pygame.Surface((TILE_SIZE - 10, TILE_SIZE - 10))
-        self.image.fill(BLUE)
+        self.image.fill(GREEN)
         self.rect = self.image.get_rect()
 
         # Save starting position for when the player dies
@@ -41,7 +41,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.start_y
 
         self.speed = 5
-        self.facing = "RIGHT" # Helps bullets know which way to go
+        self.facing = "E" # Helps bullets know which way to go
 
     def update(self, walls):
         # Save old position in case we hit a wall
@@ -52,21 +52,27 @@ class Player(pygame.sprite.Sprite):
 
         # ==========================================
         # STUDENT TODO 1: PLAYER MOVEMENT
+        
         # ==========================================
-        # Hint: If the left arrow key is pressed (pygame.K_LEFT),
-        # decrease self.rect.x by self.speed and set self.facing to "LEFT".
-        # Do the same for RIGHT, UP, and DOWN!
+def update(self, walls):
+    self.rect.x -= self.speed
+    self.facing = "W"
 
-        # [WRITE YOUR MOVEMENT CODE HERE]
+if keys[pygame.K_RIGHT]:
+    self.rect.x += self.speed
+    self.facing = "E"
 
+if keys[pygame.K_UP]:
+    self.rect.y -= self.speed
+    self.facing = "N"
 
-
-        # --- Wall Collision Logic (Provided so you don't get stuck!) ---
-        # If the player hits a wall after moving, we push them back to their old position.
-        for wall in walls:
-            if self.rect.colliderect(wall.rect):
-                self.rect.x = old_x
-                self.rect.y = old_y
+if keys[pygame.K_DOWN]:
+    self.rect.y += self.speed
+    self.facing = "S"
+for wall in walls:
+    if self.rect.colliderect(wall.rect):
+        self.rect.x = old_x
+        self.rect.y = old_y
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -100,7 +106,7 @@ class Goal(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.Surface((TILE_SIZE, TILE_SIZE))
-        self.image.fill(GREEN)
+        self.image.fill(BLUE)
         self.rect = self.image.get_rect()
         self.rect.x = x * TILE_SIZE
         self.rect.y = y * TILE_SIZE
@@ -117,13 +123,13 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = direction
 
     def update(self):
-        if self.direction == "RIGHT":
+        if self.direction == "E":
             self.rect.x += self.speed
-        elif self.direction == "LEFT":
+        elif self.direction == "W":
             self.rect.x -= self.speed
-        elif self.direction == "UP":
+        elif self.direction == "N":
             self.rect.y -= self.speed
-        elif self.direction == "DOWN":
+        elif self.direction == "S":
             self.rect.y += self.speed
 
         # Kill bullet if it goes off screen to save memory
@@ -135,19 +141,19 @@ class Bullet(pygame.sprite.Sprite):
 # ==========================================
 # W = Wall, P = Player Start, E = Enemy, G = Goal, Space = Empty
 level_map = [
-    "WWWWWWWWWWWWWWWWWWWW",
-    "WP       W         W",
-    "W        W    E    W",
-    "W   WWWWWW         W",
-    "W        W    WWWWWW",
-    "W  E               W",
-    "W        W         W",
-    "W  WWWWWWWWWWWW    W",
-    "W             E    W",
-    "W        W         W",
-    "W        W         G",
+    "WP WWWWW   W   W  GW",
+    "W  W       W   W   W",
+    "W  W       W   W   W",
+    "W  WWWWW   WWWWW   W",
+    "W      W   W   W   W",
+    "W      W   W   W   W",
+    "WWWWWWW    W   W   W",
+    "W                E W",
+    "W                  W",
+    "W                  W",
     "WWWWWWWWWWWWWWWWWWWW",
 ]
+
 
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
@@ -196,8 +202,9 @@ while running:
                 # Pass it the player's center x, center y, and facing direction.
                 # Add the new bullet to 'all_sprites' and 'bullets' groups.
 
-                # [WRITE YOUR SHOOTING CODE HERE]
-                pass
+                bullet = Bullet(player.rect.centerx, player.rect.centery, player.facing)
+                all_sprites.add(bullet)
+                bullets.add(bullet)
 
     # --- Updates ---
     # Update player (passing walls for collision check)
@@ -209,29 +216,19 @@ while running:
 
     # ==========================================
     # STUDENT TODO 3: BULLET VS ENEMY COLLISION
-    # ==========================================
-    # Hint: Use pygame.sprite.groupcollide(group1, group2, dokill1, dokill2)
-    # If a bullet hits an enemy, BOTH should disappear (dokill=True).
-
-    # [WRITE YOUR BULLET COLLISION CODE HERE]
-
-
+if pygame.sprite.groupcollide(bullets, enemies, True, True):
+    player.rect.x = player.start_x
+    player.rect.y = player.start_y
+    
     # ==========================================
     # STUDENT TODO 4: PLAYER VS ENEMY COLLISION
-    # ==========================================
-    # Hint: Use pygame.sprite.spritecollide(sprite, group, dokill)
-    # If the player hits an enemy, teleport the player back to player.start_x and player.start_y.
-
-    # [WRITE YOUR ENEMY COLLISION CODE HERE]
-
-
-    # ==========================================
+if pygame.sprite.spritecollide(player, enemies, False):
+    player.rect.x = player.start_x
+    player.rect.y = player.start_y
     # STUDENT TODO 5: WIN CONDITION (PLAYER VS GOAL)
-    # ==========================================
-    # If the player collides with the goal, print "YOU WIN!" to the console and set running = False
-
-    # [WRITE YOUR WIN CONDITION CODE HERE]
-
+if pygame.sprite.spritecollide(player, goals, False):    
+    print("YOU WIN!")    
+    running = False
 
     # --- Drawing ---
     screen.fill(BLACK)
